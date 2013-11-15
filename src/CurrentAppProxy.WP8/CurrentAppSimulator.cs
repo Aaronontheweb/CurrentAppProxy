@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Xml.Linq;
 using Windows.ApplicationModel.Store;
 using Windows.Storage;
@@ -78,9 +80,25 @@ namespace MarkedUp
                 if (!_instance._methodResults["RequestProductPurchaseAsync_GetResult"])
                     throw new ApplicationException("RequestProductPurchaseAsync was programmed to fail in CurrentAppSimulator settings");
 
-                if (_instance._listingInformation.ListingInformation.ProductListings.ContainsKey(productId))
+                //This product exists, and a user doesn't already have a license for it if it's not consumable
+                if (_instance._listingInformation.ListingInformation.ProductListings.ContainsKey(productId) 
+                    && !(_instance._licenseInformation.ProductLicenses.ContainsKey(productId)
+                     && _instance._listingInformation.ListingInformation.ProductListings[productId].ProductType != ProductType.Consumable
+                    ))
                 {
-                    return "purchased " + productId; //TODO: replace with appropriate XML
+                    var productListing = _instance._listingInformation.ListingInformation.ProductListings[productId];
+                    var xml = CreateProductReciept(productListing);
+
+                    _instance._licenseInformation.ProductLicenses.Add(productListing.ProductId, 
+                        new ProductLicense(){ ExpirationDate = DEVELOPER_LICENSE_EXPIRES, 
+                            IsActive = true, IsConsumable = productListing.ProductType == ProductType.Consumable, 
+                            ProductId = productListing.ProductId});
+                    return xml;
+                }
+                else if (!(_instance._licenseInformation.ProductLicenses.ContainsKey(productId)
+                     && _instance._listingInformation.ListingInformation.ProductListings[productId].ProductType != ProductType.Consumable))
+                {
+                    throw new ApplicationException(string.Format("User already has a license for {0}", productId));
                 }
                 else
                 {
@@ -107,7 +125,7 @@ namespace MarkedUp
                 if (!_instance._methodResults["GetAppReceiptAsync_GetResult"])
                     throw new ApplicationException("GetAppReceiptAsync was programmed to fail in CurrentAppSimulator settings");
 
-                    return "purchased " + AppId; //TODO: replace with appropriate XML
+                return "purchased " + AppId; //TODO: replace with appropriate XML
             });
         }
 
@@ -219,7 +237,7 @@ namespace MarkedUp
                 var isActive = bool.Parse(productLicenseNode.Element("IsActive").SafeRead("false"));
                 var isConsumable = bool.Parse(productLicenseNode.Element("IsConsumable").SafeRead("false"));
                 var expirationDate = CalculateExpirationDate(productLicenseNode.Element("ExpirationDate").SafeRead());
-                li.ProductLicenses.Add(productId, new ProductLicense() { ProductId = productId, ExpirationDate = expirationDate, IsActive = isActive, IsConsumable = isConsumable});
+                li.ProductLicenses.Add(productId, new ProductLicense() { ProductId = productId, ExpirationDate = expirationDate, IsActive = isActive, IsConsumable = isConsumable });
             }
 
             return li;
@@ -235,7 +253,7 @@ namespace MarkedUp
             DateTime expirationDate;
             if (String.IsNullOrEmpty(expirationString) || !DateTime.TryParse(expirationString, out expirationDate))
                 expirationDate = DEVELOPER_LICENSE_EXPIRES;
-                    //The date a developer license expires ({12/31/1600 12:00:00 AM UTC})
+            //The date a developer license expires ({12/31/1600 12:00:00 AM UTC})
             return expirationDate;
         }
 
@@ -318,7 +336,27 @@ namespace MarkedUp
 
         #endregion
 
-       
+        #region Reciept factory for completed purchases
+
+        public const string RecieptXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?> 
+<Receipt Version=""1.0"" ReceiptDate=""{0}"" CertificateId=""{1}"" ReceiptDeviceId=""{2}"">
+  <ProductReceipt Id=""{3}"" AppId=""{4}"" ProductId=""{5}"" PurchaseDate=""{0}"" ProductType=""{6}"" /> 
+ </Receipt>";
+        public static string CreateProductReciept(ProductListing purchasedProduct)
+        {
+            var purchaseDate = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var certificateId = String.Empty;
+            var productId = purchasedProduct.ProductId;
+            var productType = purchasedProduct.ProductType;
+            var deviceId = Guid.NewGuid();
+            var recieptId = Guid.NewGuid();
+
+            return string.Format(RecieptXml, purchaseDate, certificateId, deviceId, recieptId, AppId, productId,
+                productType);
+        }
+
+        #endregion
+
     }
 
     #region AppListing class - used to hold internal state for WP8 - CurrentAppSimulator
@@ -356,6 +394,8 @@ namespace MarkedUp
     }
 
     #endregion
+
+
 
 #endif
 
