@@ -98,11 +98,11 @@ namespace MarkedUp
                 else if (!(_instance._licenseInformation.ProductLicenses.ContainsKey(productId)
                      && _instance._listingInformation.ListingInformation.ProductListings[productId].ProductType != ProductType.Consumable))
                 {
-                    throw new ApplicationException(string.Format("User already has a license for {0}", productId));
+                    throw new ArgumentException(string.Format("User already has a license for {0}", productId));
                 }
                 else
                 {
-                    throw new ApplicationException(string.Format("In-app purchase {0} not found in CurrentAppSimulator listing information", productId));
+                    throw new ArgumentException(string.Format("In-app purchase {0} not found in CurrentAppSimulator listing information", productId));
                 }
             });
         }
@@ -136,9 +136,17 @@ namespace MarkedUp
                 if (!_instance._methodResults["GetProductReceiptAsync_GetResult"])
                     throw new ApplicationException("GetProductReceiptAsync was programmed to fail in CurrentAppSimulator settings");
 
-                if (_instance._listingInformation.ListingInformation.ProductListings.ContainsKey(productId))
+                //This product exists AND a user has bought it
+                if (_instance._listingInformation.ListingInformation.ProductListings.ContainsKey(productId) && _instance._licenseInformation.ProductLicenses.ContainsKey(productId))
                 {
-                    return "purchased " + productId; //TODO: replace with appropriate XML
+                    var productListing = _instance._listingInformation.ListingInformation.ProductListings[productId];
+                    var xml = CreateProductReciept(productListing);
+                    return xml;
+                }
+                else if (_instance._licenseInformation.ProductLicenses.ContainsKey(productId))
+                {
+                    //no receipt
+                    return null;
                 }
                 else
                 {
@@ -338,7 +346,7 @@ namespace MarkedUp
 
         #region Reciept factory for completed purchases
 
-        public const string RecieptXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?> 
+        public const string ProductRecieptXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?> 
 <Receipt Version=""1.0"" ReceiptDate=""{0}"" CertificateId=""{1}"" ReceiptDeviceId=""{2}"">
   <ProductReceipt Id=""{3}"" AppId=""{4}"" ProductId=""{5}"" PurchaseDate=""{0}"" ProductType=""{6}"" /> 
  </Receipt>";
@@ -351,7 +359,7 @@ namespace MarkedUp
             var deviceId = Guid.NewGuid();
             var recieptId = Guid.NewGuid();
 
-            return string.Format(RecieptXml, purchaseDate, certificateId, deviceId, recieptId, AppId, productId,
+            return string.Format(ProductRecieptXml, purchaseDate, certificateId, deviceId, recieptId, AppId, productId,
                 productType);
         }
 

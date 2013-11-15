@@ -118,18 +118,44 @@ namespace MarkedUp.Tests
         /// </summary>
         /// <returns></returns>
         [TestMethod]
-        public async Task Should_get_correct_RequestProductPurchaseAsync_result_for_valid_InAppPurchase()
+        public async Task Should_get_correct_RequestProductPurchaseAsync_result_for_VALID_InAppPurchase()
         {
             //arrange
             var iapConfigFile = await StorageFile.GetFileFromApplicationUriAsync(TestDataUris.InAppPurchaseLicenseUri);
             await CurrentAppProxy.ReloadSimulatorSettingsAsync(iapConfigFile);
 
             //act
-            var productListing = await CurrentAppProxy.LoadListingInformationAsync();
             var iapReceipt = await CurrentAppProxy.RequestProductPurchaseAsync("MarkedUpExtraFeature", false);
 
             //assert
             Assert.IsNotNull(iapReceipt);
+        }
+
+        /// <summary>
+        /// If an in-app purchase exists, we should be able to return the correct reciept XML for the purchase
+        /// via CurrentAppProxy
+        /// </summary>
+        /// <returns></returns>
+        [TestMethod]
+        public async Task Should_get_correct_RequestProductPurchaseAsync_EXCEPTION_for_INVALID_InAppPurchase()
+        {
+            //arrange
+            var iapConfigFile = await StorageFile.GetFileFromApplicationUriAsync(TestDataUris.InAppPurchaseLicenseUri);
+            await CurrentAppProxy.ReloadSimulatorSettingsAsync(iapConfigFile);
+
+            //act
+            try
+            {
+                var iapReceipt = await CurrentAppProxy.RequestProductPurchaseAsync("NonExistantFeature", false);
+            }
+            catch (System.ArgumentException ex)
+            {
+                Assert.IsTrue(true, "PASS");
+                return;
+            }
+
+            //assert
+            Assert.Fail();
         }
 
 #else //don't run any tests in release mode (where CurrentApp is used instead of CurrentAppSimulator)
