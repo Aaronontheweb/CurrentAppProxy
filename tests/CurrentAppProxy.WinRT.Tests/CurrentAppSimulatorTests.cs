@@ -92,6 +92,45 @@ namespace MarkedUp.Tests
             Assert.AreEqual("$14.99", someOtherFeature.FormattedPrice);
         }
 
+        /// <summary>
+        /// Should be able to load purchased in-app products included in the license file
+        /// </summary>
+        /// <returns></returns>
+        [TestMethod]
+        public async Task Should_get_iap_licenses()
+        {
+            //arrange
+            var iapConfigFile = await StorageFile.GetFileFromApplicationUriAsync(TestDataUris.PurchaseIAPLicenseUri);
+            await CurrentAppProxy.ReloadSimulatorSettingsAsync(iapConfigFile);
+
+            //act
+            var license = CurrentAppProxy.LicenseInformation;
+
+            //assert
+            Assert.IsTrue(license.ProductLicenses.ContainsKey("MarkedUpExtraFeature"));
+            Assert.IsTrue(license.ProductLicenses["MarkedUpExtraFeature"].IsActive);
+            Assert.IsFalse(license.ProductLicenses["MarkedUpExtraFeature"].IsConsumable);
+        }
+
+        /// <summary>
+        /// If an in-app purchase exists, we should be able to return the correct reciept XML for the purchase
+        /// via CurrentAppProxy
+        /// </summary>
+        /// <returns></returns>
+        [TestMethod]
+        public async Task Should_get_correct_RequestProductPurchaseAsync_result_for_valid_InAppPurchase()
+        {
+            //arrange
+            var iapConfigFile = await StorageFile.GetFileFromApplicationUriAsync(TestDataUris.InAppPurchaseLicenseUri);
+            await CurrentAppProxy.ReloadSimulatorSettingsAsync(iapConfigFile);
+
+            //act
+            var productListing = await CurrentAppProxy.LoadListingInformationAsync();
+            var iapReceipt = await CurrentAppProxy.RequestProductPurchaseAsync("MarkedUpExtraFeature", false);
+
+            //assert
+            Assert.IsNotNull(iapReceipt);
+        }
 
 #else //don't run any tests in release mode (where CurrentApp is used instead of CurrentAppSimulator)
         [Ignore]

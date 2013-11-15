@@ -141,6 +141,9 @@
     <Content Include="TestData\CurrentAppSimulator\inapppurchase-appinfo.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\CurrentAppSimulator\license-with-purchases.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\CurrentAppSimulator\purchased-appinfo-fail.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

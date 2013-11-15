@@ -16,5 +16,6 @@ namespace MarkedUp.Tests
         public static readonly Uri FreeLicenseUri = new Uri("ms-appx:///TestData/CurrentAppSimulator/free-appinfo.xml");
         public static readonly Uri InAppPurchaseLicenseUri = new Uri("ms-appx:///TestData/CurrentAppSimulator/inapppurchase-appinfo.xml");
         public static readonly Uri FailedAppStoreListingLookupUri = new Uri("ms-appx:///TestData/CurrentAppSimulator/purchased-appinfo-fail.xml");
+        public static readonly Uri PurchaseIAPLicenseUri = new Uri("ms-appx:///TestData/CurrentAppSimulator/license-with-purchases.xml");
     }
 }

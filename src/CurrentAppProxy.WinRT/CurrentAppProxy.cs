@@ -407,6 +407,14 @@ namespace MarkedUp
             return clone;
         }
 
+        /// <summary>
+        /// Internal constructor
+        /// </summary>
+        internal LicenseInformation()
+        {
+            ProductLicenses = new Dictionary<string, ProductLicense>();
+        }
+
     }
 
     #endregion

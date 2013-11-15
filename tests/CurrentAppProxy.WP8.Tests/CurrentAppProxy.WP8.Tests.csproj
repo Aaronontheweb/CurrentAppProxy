@@ -123,6 +123,10 @@
       <Link>TestData\CurrentAppSimulator\inapppurchase-appinfo.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\CurrentAppProxy.WinRT.Tests\TestData\CurrentAppSimulator\license-with-purchases.xml">
+      <Link>TestData\CurrentAppSimulator\license-with-purchases.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\CurrentAppProxy.WinRT.Tests\TestData\CurrentAppSimulator\purchased-appinfo-fail.xml">
       <Link>TestData\CurrentAppSimulator\purchased-appinfo-fail.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -160,6 +164,9 @@
       <Project>{C2B5F542-49F9-4CF3-B703-5B3FC63BA69A}</Project>
       <Name>CurrentAppProxy.WP8</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).$(TargetFrameworkVersion).Overrides.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).CSharp.targets" />

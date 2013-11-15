@@ -217,9 +217,9 @@ namespace MarkedUp
             {
                 var productId = productLicenseNode.Attribute("ProductId").SafeRead();
                 var isActive = bool.Parse(productLicenseNode.Element("IsActive").SafeRead("false"));
-                var isConsumeable = bool.Parse(productLicenseNode.Element("IsActive").SafeRead("false"));
+                var isConsumable = bool.Parse(productLicenseNode.Element("IsConsumable").SafeRead("false"));
                 var expirationDate = CalculateExpirationDate(productLicenseNode.Element("ExpirationDate").SafeRead());
-                li.ProductLicenses.Add(productId, new ProductLicense() { ProductId = productId, ExpirationDate = expirationDate, IsActive = isActive, IsConsumable = isConsumeable});
+                li.ProductLicenses.Add(productId, new ProductLicense() { ProductId = productId, ExpirationDate = expirationDate, IsActive = isActive, IsConsumable = isConsumable});
             }
 
             return li;
