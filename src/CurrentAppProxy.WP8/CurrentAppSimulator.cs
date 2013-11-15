@@ -10,7 +10,7 @@ using Windows.Storage;
 
 namespace MarkedUp
 {
-#if DEBUG //This class should not exist in production, just like the real thing on WinRT\
+#if DEBUG //This class should not exist in production, just like the real thing on WinRT
     public class CurrentAppSimulator
     {
         private static readonly DateTime DEVELOPER_LICENSE_EXPIRES = new DateTime(504911232000000000, DateTimeKind.Utc);
@@ -208,15 +208,35 @@ namespace MarkedUp
             var licenseNode = licenseNodes.First();
 
             var expirationString = licenseNode.Element("ExpirationDate").SafeRead();
-            DateTime expirationDate;
-            if (String.IsNullOrEmpty(expirationString) || !DateTime.TryParse(expirationString, out expirationDate))
-                expirationDate = DEVELOPER_LICENSE_EXPIRES; //The date a developer license expires ({12/31/1600 12:00:00 AM UTC})
-
-            li.ExpirationDate = expirationDate;
+            li.ExpirationDate = CalculateExpirationDate(expirationString);
             li.IsActive = bool.Parse(licenseNode.Element("IsActive").SafeRead("true"));
             li.IsTrial = bool.Parse(licenseNode.Element("IsTrial").SafeRead("true"));
 
+            //Parse in-app-purchase-specific licenses
+            foreach (var productLicenseNode in licenseNode.Elements("Product"))
+            {
+                var productId = productLicenseNode.Attribute("ProductId").SafeRead();
+                var isActive = bool.Parse(productLicenseNode.Element("IsActive").SafeRead("false"));
+                var isConsumeable = bool.Parse(productLicenseNode.Element("IsActive").SafeRead("false"));
+                var expirationDate = CalculateExpirationDate(productLicenseNode.Element("ExpirationDate").SafeRead());
+                li.ProductLicenses.Add(productId, new ProductLicense() { ProductId = productId, ExpirationDate = expirationDate, IsActive = isActive, IsConsumable = isConsumeable});
+            }
+
             return li;
+        }
+
+        /// <summary>
+        /// Calculates a license expiration date based off what's included in the WindowsStoreProxy.xml file
+        /// </summary>
+        /// <param name="expirationString"></param>
+        /// <returns></returns>
+        private static DateTime CalculateExpirationDate(string expirationString)
+        {
+            DateTime expirationDate;
+            if (String.IsNullOrEmpty(expirationString) || !DateTime.TryParse(expirationString, out expirationDate))
+                expirationDate = DEVELOPER_LICENSE_EXPIRES;
+                    //The date a developer license expires ({12/31/1600 12:00:00 AM UTC})
+            return expirationDate;
         }
 
         private static AppListing GetListingFromXml(IEnumerable<XElement> listingNodes)
