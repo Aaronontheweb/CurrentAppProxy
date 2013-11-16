@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 using Windows.Storage;
-using MarkedUp;
 
 namespace MarkedUp.Tests
 {
@@ -148,7 +147,7 @@ namespace MarkedUp.Tests
             {
                 var iapReceipt = await CurrentAppProxy.RequestProductPurchaseAsync("NonExistantFeature", false);
             }
-            catch (System.ArgumentException ex)
+            catch (System.ArgumentException)
             {
                 Assert.IsTrue(true, "PASS");
                 return;
@@ -156,6 +155,24 @@ namespace MarkedUp.Tests
 
             //assert
             Assert.Fail();
+        }
+
+        /// <summary>
+        /// Should be able to purchase a premium app if it has not been bought already
+        /// </summary>
+        /// <returns></returns>
+        [TestMethod]
+        public async Task Should_get_correct_AppPurchaseAsync_result()
+        {
+            //arrange
+            var premiumAppFile = await StorageFile.GetFileFromApplicationUriAsync(TestDataUris.TrialLicenseFileUri);
+            await CurrentAppProxy.ReloadSimulatorSettingsAsync(premiumAppFile);
+
+            //act
+            var iapReceipt = await CurrentAppProxy.RequestAppPurchaseAsync(true);
+
+            //assert
+            Assert.IsNotNull(iapReceipt);
         }
 
 #else //don't run any tests in release mode (where CurrentApp is used instead of CurrentAppSimulator)

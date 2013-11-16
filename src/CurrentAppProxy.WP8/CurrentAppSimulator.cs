@@ -87,7 +87,7 @@ namespace MarkedUp
                     ))
                 {
                     var productListing = _instance._listingInformation.ListingInformation.ProductListings[productId];
-                    var xml = CreateProductReciept(productListing);
+                    var xml = CreateProductReceipt(productListing);
 
                     _instance._licenseInformation.ProductLicenses.Add(productListing.ProductId, 
                         new ProductLicense(){ ExpirationDate = DEVELOPER_LICENSE_EXPIRES, 
@@ -114,7 +114,10 @@ namespace MarkedUp
                 if (!_instance._methodResults["RequestAppPurchaseAsync_GetResult"])
                     throw new ApplicationException("RequestAppPurchaseAsync was programmed to fail in CurrentAppSimulator settings");
 
-                return "purchased " + AppId; //TODO: replace with appropriate XML
+                if (_instance._licenseInformation.IsActive)
+                    throw new ApplicationException("User already owns this application");
+
+                return CreateAppPurchaseReceipt(_instance._listingInformation);
             });
         }
 
@@ -140,7 +143,7 @@ namespace MarkedUp
                 if (_instance._listingInformation.ListingInformation.ProductListings.ContainsKey(productId) && _instance._licenseInformation.ProductLicenses.ContainsKey(productId))
                 {
                     var productListing = _instance._listingInformation.ListingInformation.ProductListings[productId];
-                    var xml = CreateProductReciept(productListing);
+                    var xml = CreateProductReceipt(productListing);
                     return xml;
                 }
                 else if (_instance._licenseInformation.ProductLicenses.ContainsKey(productId))
@@ -346,11 +349,11 @@ namespace MarkedUp
 
         #region Reciept factory for completed purchases
 
-        public const string ProductRecieptXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?> 
+        public const string ProductReceiptXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?> 
 <Receipt Version=""1.0"" ReceiptDate=""{0}"" CertificateId=""{1}"" ReceiptDeviceId=""{2}"">
   <ProductReceipt Id=""{3}"" AppId=""{4}"" ProductId=""{5}"" PurchaseDate=""{0}"" ProductType=""{6}"" /> 
  </Receipt>";
-        public static string CreateProductReciept(ProductListing purchasedProduct)
+        internal static string CreateProductReceipt(ProductListing purchasedProduct)
         {
             var purchaseDate = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
             var certificateId = String.Empty;
@@ -359,8 +362,23 @@ namespace MarkedUp
             var deviceId = Guid.NewGuid();
             var recieptId = Guid.NewGuid();
 
-            return string.Format(ProductRecieptXml, purchaseDate, certificateId, deviceId, recieptId, AppId, productId,
+            return string.Format(ProductReceiptXml, purchaseDate, certificateId, deviceId, recieptId, AppId, productId,
                 productType);
+        }
+
+        public const string AppReceiptXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?> 
+<Receipt Version=""1.0"" ReceiptDate=""{0}"" CertificateId=""{1}"" ReceiptDeviceId=""{2}"">
+  <AppReceipt Id=""{3}"" AppId=""{4}"" PurchaseDate=""{0}"" LicenseType=""{5}"" /> 
+ </Receipt>";
+        internal static string CreateAppPurchaseReceipt(AppListing listing)
+        {
+            var purchaseDate = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var certificateId = String.Empty;
+            var licenseType = "Full";
+            var deviceId = Guid.NewGuid();
+            var recieptId = Guid.NewGuid();
+
+            return string.Format(AppReceiptXml, purchaseDate, certificateId, deviceId, recieptId, AppId, licenseType);
         }
 
         #endregion
